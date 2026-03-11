@@ -1,0 +1,12 @@
+# Runtime output
+/Logs/
+/Reports/
+
+# PowerShell generated files
+*.ps1xml
+*.psd1.bak
+
+# Editor and OS junk
+.vscode/
+Thumbs.db
+desktop.ini
