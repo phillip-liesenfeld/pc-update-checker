@@ -1,0 +1,313 @@
+{
+  "global": {
+    "timeoutSeconds": 30,
+    "parallelExecution": true,
+    "maxThreads": 5,
+    "reportPath": "./Reports",
+    "userAgent": "PCUpdateChecker/1.0",
+    "logging": {
+      "path": "./Logs",
+      "level": "Info"
+    }
+  },
+  "components": [
+    {
+      "id": "nvidia-driver",
+      "name": "NVIDIA Graphics Driver",
+      "category": "Driver",
+      "priority": "High",
+      "detection": {
+        "method": "WMI",
+        "query": "SELECT DriverVersion FROM Win32_VideoController WHERE Name LIKE '%NVIDIA%'",
+        "property": "DriverVersion",
+        "transformRegex": "^(\\d+\\.\\d+)" 
+      },
+      "fetching": {
+        "method": "Scrape",
+        "url": "https://www.nvidia.com/Download/processDriver.aspx?psid=101&pfid=816&rpf=1",
+        "regex": "Version: ([0-9.]+)"
+      }
+    },
+    {
+      "id": "vscode",
+      "name": "Visual Studio Code",
+      "category": "Software",
+      "priority": "Medium",
+      "autoUpdate": true,
+      "detection": {
+        "method": "File",
+        "path": "C:\\Program Files\\Microsoft VS Code\\Code.exe",
+        "property": "ProductVersion"
+      },
+      "fetching": {
+        "method": "Winget",
+        "packageId": "Microsoft.VisualStudioCode"
+      }
+    },
+    {
+      "id": "powertoys",
+      "name": "PowerToys",
+      "category": "Software",
+      "priority": "Low",
+      "autoUpdate": true,
+      "detection": {
+        "method": "Winget",
+        "packageId": "Microsoft.PowerToys"
+      },
+      "fetching": {
+        "method": "Winget",
+        "packageId": "Microsoft.PowerToys"
+      }
+    },
+    {
+      "id": "armoury-crate",
+      "name": "ASUS Armoury Crate",
+      "category": "Software",
+      "priority": "Medium",
+      "autoUpdate": false,
+      "_note": "autoUpdate intentionally disabled - Armoury Crate replaced by G-Helper, do not reinstall",
+      "detection": {
+        "method": "File",
+        "path": "C:\\Program Files\\ASUS\\ARMOURY CRATE Service\\ArmouryCrate.Service.exe",
+        "property": "ProductVersion"
+      },
+      "fetching": {
+        "strategies": [
+          {
+            "method": "Winget",
+            "packageId": "ASUS.ArmouryCrateLite"
+          },
+          {
+            "method": "Scrape",
+            "url": "https://rog.asus.com/us/innovation/armoury-crate/",
+            "regex": "Version ([0-9.]+)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "g-helper",
+      "name": "G-Helper",
+      "category": "Software",
+      "priority": "High",
+      "autoUpdate": false,
+      "_note": "autoUpdate false - GitHub-sourced updates report only, do not auto-execute a downloaded installer",
+      "detection": {
+        "method": "File",
+        "path": "C:\\Users\\joe6p\\Downloads\\GHelper.exe",
+        "property": "ProductVersion"
+      },
+      "fetching": {
+        "method": "GitHub",
+        "repo": "seerge/g-helper",
+        "assetRegex": "GHelper.*\\.exe$"
+      }
+    },
+    {
+      "id": "geforce-experience",
+      "name": "NVIDIA GeForce Experience",
+      "category": "Software",
+      "priority": "Medium",
+      "autoUpdate": true,
+      "detection": {
+        "method": "File",
+        "path": "C:\\Program Files\\NVIDIA Corporation\\NVIDIA GeForce Experience\\NVIDIA GeForce Experience.exe",
+        "property": "ProductVersion"
+      },
+      "fetching": {
+        "strategies": [
+          {
+            "method": "Winget",
+            "packageId": "Nvidia.GeForceExperience"
+          },
+          {
+            "method": "Scrape",
+            "url": "https://www.nvidia.com/en-us/geforce/geforce-experience/",
+            "regex": "version\"\\s*:\\s*\"([0-9.]+)\""
+          }
+        ]
+      }
+    },
+    {
+      "id": "razer-synapse",
+      "name": "Razer Synapse 3",
+      "category": "Software",
+      "priority": "Medium",
+      "autoUpdate": true,
+      "detection": {
+        "method": "Registry",
+        "path": "HKLM:\\SOFTWARE\\Razer\\Synapse3",
+        "key": "Version"
+      },
+      "fetching": {
+        "strategies": [
+          {
+            "method": "Winget",
+            "packageId": "Razer.Synapse"
+          },
+          {
+            "method": "Scrape",
+            "url": "https://www.razer.com/synapse-3",
+            "regex": "Version ([0-9.]+)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "razer-cortex",
+      "name": "Razer Cortex",
+      "category": "Software",
+      "priority": "Low",
+      "autoUpdate": true,
+      "detection": {
+        "method": "File",
+        "path": "C:\\Program Files (x86)\\Razer\\Razer Cortex\\RazerCortex.exe",
+        "property": "ProductVersion"
+      },
+      "fetching": {
+        "strategies": [
+          {
+            "method": "Winget",
+            "packageId": "Razer.Cortex"
+          },
+          {
+            "method": "Scrape",
+            "url": "https://www.razer.com/cortex",
+            "regex": "Version ([0-9.]+)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "logitech-options-plus",
+      "name": "Logitech Options+",
+      "category": "Software",
+      "priority": "Medium",
+      "autoUpdate": true,
+      "detection": {
+        "method": "File",
+        "path": "C:\\Program Files\\LogiOptionsPlus\\logioptionsplus.exe",
+        "property": "ProductVersion"
+      },
+      "fetching": {
+        "strategies": [
+          {
+            "method": "Winget",
+            "packageId": "Logitech.OptionsPlus"
+          },
+          {
+            "method": "Scrape",
+            "url": "https://www.logitech.com/en-us/software/logi-options-plus.html",
+            "regex": "Version ([0-9.]+)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "steam",
+      "name": "Steam",
+      "category": "Software",
+      "priority": "Low",
+      "autoUpdate": true,
+      "detection": {
+        "method": "Winget",
+        "packageId": "Valve.Steam"
+      },
+      "fetching": {
+        "strategies": [
+          {
+            "method": "Winget",
+            "packageId": "Valve.Steam"
+          },
+          {
+            "method": "Scrape",
+            "url": "https://store.steampowered.com/about/",
+            "regex": "Version ([0-9.]+)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "epic-games",
+      "name": "Epic Games Launcher",
+      "category": "Software",
+      "priority": "Low",
+      "autoUpdate": true,
+      "detection": {
+        "method": "File",
+        "path": "C:\\Program Files (x86)\\Epic Games\\Launcher\\Portal\\Binaries\\Win64\\EpicGamesLauncher.exe",
+        "property": "ProductVersion"
+      },
+      "fetching": {
+        "strategies": [
+          {
+            "method": "Winget",
+            "packageId": "EpicGames.EpicGamesLauncher"
+          },
+          {
+            "method": "Scrape",
+            "url": "https://www.epicgames.com/store/download",
+            "regex": "Version ([0-9.]+)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "battlenet",
+      "name": "Battle.net",
+      "category": "Software",
+      "priority": "Low",
+      "autoUpdate": true,
+      "detection": {
+        "method": "File",
+        "path": "C:\\Program Files (x86)\\Battle.net\\Battle.net.exe",
+        "property": "ProductVersion"
+      },
+      "fetching": {
+        "strategies": [
+          {
+            "method": "Winget",
+            "packageId": "Blizzard.BattleNet"
+          },
+          {
+            "method": "Scrape",
+            "url": "https://www.blizzard.com/apps/battle.net/desktop",
+            "regex": "Version ([0-9.]+)"
+          }
+        ]
+      }
+    },
+    {
+      "id": "cyberpunk-2077-steam",
+      "name": "Cyberpunk 2077 (Steam)",
+      "category": "Game",
+      "priority": "Low",
+      "autoUpdate": false,
+      "detection": {
+        "method": "SteamManifest",
+        "appId": "1091500"
+      },
+      "fetching": {
+        "method": "Scrape",
+        "url": "https://steamdb.info/app/1091500/patchnotes/",
+        "regex": "Build ([0-9]+)"
+      }
+    },
+    {
+      "id": "fortnite-epic",
+      "name": "Fortnite (Epic)",
+      "category": "Game",
+      "priority": "Low",
+      "autoUpdate": false,
+      "detection": {
+        "method": "EpicManifest",
+        "appName": "Fortnite"
+      },
+      "fetching": {
+        "method": "Scrape",
+        "url": "https://fortnite.fandom.com/wiki/Patch_Notes",
+        "regex": "v([0-9.]+)"
+      }
+    }
+  ]
+}

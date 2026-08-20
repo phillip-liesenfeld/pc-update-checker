@@ -1,0 +1,610 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Update Report</title>
+    <style>
+        :root {
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --border-color: #e5e7eb;
+            --primary-color: #3b82f6;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --neutral-color: #9ca3af;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .meta {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        /* Summary Stats */
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Controls */
+        .controls {
+            background: var(--card-bg);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .search-box {
+            flex: 1;
+            min-width: 250px;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 0.375rem;
+            font-size: 1rem;
+        }
+
+        .filters {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .filter-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+        }
+
+        /* Component Grid */
+        .component-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .component-card {
+            background: var(--card-bg);
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+            transition: transform 0.2s;
+            border-left: 4px solid transparent;
+        }
+
+        .component-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .component-name {
+            font-weight: 600;
+            font-size: 1.125rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .component-category {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background: var(--bg-color);
+            padding: 0.125rem 0.5rem;
+            border-radius: 9999px;
+            display: inline-block;
+        }
+
+        .status-badge {
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 0.25rem 0.75rem;
+            border-radius: 9999px;
+            text-transform: uppercase;
+        }
+
+        .card-body {
+            padding: 1rem;
+        }
+
+        .version-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 0.5rem;
+            font-size: 0.875rem;
+        }
+
+        .version-label {
+            color: var(--text-secondary);
+        }
+
+        .version-value {
+            font-family: monospace;
+            font-weight: 500;
+        }
+
+        .card-footer {
+            padding: 1rem;
+            background: #f9fafb;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background-color 0.2s;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #2563eb;
+        }
+
+        /* Status Colors */
+        .status-update-available { border-left-color: var(--warning-color); }
+        .status-update-available .status-badge { background-color: #fef3c7; color: #d97706; }
+        
+        .status-up-to-date { border-left-color: var(--success-color); }
+        .status-up-to-date .status-badge { background-color: #d1fae5; color: #059669; }
+        
+        .status-error { border-left-color: var(--error-color); }
+        .status-error .status-badge { background-color: #fee2e2; color: #dc2626; }
+        
+        .status-not-installed { border-left-color: var(--neutral-color); }
+        .status-not-installed .status-badge { background-color: #f3f4f6; color: #4b5563; }
+
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div>
+                <h1>PC Update Report</h1>
+                <p class="meta">Generated on 2025-11-21 16:15:35</p>
+            </div>
+        </header>
+
+        <div class="summary-grid">
+                <div class="stat-card">
+        <div class="stat-value" style="color: var(--primary-color)">11</div>
+        <div class="stat-label">Total Checked</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color: var(--warning-color)"></div>
+        <div class="stat-label">Updates Available</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color: var(--success-color)">4</div>
+        <div class="stat-label">Up to Date</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-value" style="color: var(--error-color)">6</div>
+        <div class="stat-label">Errors</div>
+    </div>
+        </div>
+
+        <div class="controls">
+            <div class="search-box">
+                <input type="text" id="searchInput" placeholder="Search components by name or category...">
+            </div>
+            <div class="filters">
+                <label class="filter-label">
+                    <input type="checkbox" checked onchange="filterItems()" value="Update Available"> Updates
+                </label>
+                <label class="filter-label">
+                    <input type="checkbox" checked onchange="filterItems()" value="Up to Date"> Up to Date
+                </label>
+                <label class="filter-label">
+                    <input type="checkbox" checked onchange="filterItems()" value="Error"> Errors
+                </label>
+                <label class="filter-label">
+                    <input type="checkbox" onchange="filterItems()" value="Not Installed"> Not Installed
+                </label>
+            </div>
+        </div>
+
+        <div class="component-grid" id="grid">
+                    <div class="component-card status-error" data-name="NVIDIA Graphics Driver" data-category="Driver" data-status="Error">
+            <div class="card-header">
+                <div>
+                    <div class="component-name">NVIDIA Graphics Driver</div>
+                    <div class="component-category">Driver</div>
+                </div>
+                <div class="status-badge">Error</div>
+            </div>
+            <div class="card-body">
+                <div class="version-row">
+                    <span class="version-label">Local Version:</span>
+                    <span class="version-value">32.0</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Latest Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                <div style='color:var(--error-color); font-size:0.875rem; margin-top:0.5rem;'>Error: NvidiaFetcher: Failed to fetch NVIDIA page. NvidiaFetcher: Could not extract version from 'https://www.nvidia.com/Download/processDriver.aspx?psid=101&pfid=816&rpf=1'.</div>
+            </div>
+            <div class="card-footer">
+                
+            </div>
+        </div>        <div class="component-card status-update-available" data-name="Visual Studio Code" data-category="Software" data-status="Update Available">
+            <div class="card-header">
+                <div>
+                    <div class="component-name">Visual Studio Code</div>
+                    <div class="component-category">Software</div>
+                </div>
+                <div class="status-badge">Update Available</div>
+            </div>
+            <div class="card-body">
+                <div class="version-row">
+                    <span class="version-label">Local Version:</span>
+                    <span class="version-value">1.105.1</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Latest Version:</span>
+                    <span class="version-value">1.106.1</span>
+                </div>
+                
+            </div>
+            <div class="card-footer">
+                <a href='winget install --id Microsoft.VisualStudioCode' target='_blank' class='btn btn-primary'>Download Update</a>
+            </div>
+        </div>        <div class="component-card status-not-installed" data-name="PowerToys" data-category="Software" data-status="Not Installed">
+            <div class="card-header">
+                <div>
+                    <div class="component-name">PowerToys</div>
+                    <div class="component-category">Software</div>
+                </div>
+                <div class="status-badge">Not Installed</div>
+            </div>
+            <div class="card-body">
+                <div class="version-row">
+                    <span class="version-label">Local Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Latest Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                
+            </div>
+            <div class="card-footer">
+                
+            </div>
+        </div>        <div class="component-card status-error" data-name="ASUS Armoury Crate" data-category="Software" data-status="Error">
+            <div class="card-header">
+                <div>
+                    <div class="component-name">ASUS Armoury Crate</div>
+                    <div class="component-category">Software</div>
+                </div>
+                <div class="status-badge">Error</div>
+            </div>
+            <div class="card-body">
+                <div class="version-row">
+                    <span class="version-label">Local Version:</span>
+                    <span class="version-value">6.3.5.0</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Latest Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                <div style='color:var(--error-color); font-size:0.875rem; margin-top:0.5rem;'>Error: WebScraper: Failed to fetch URL 'https://rog.asus.com/us/innovation/armoury-crate/'. 
+
+  
+    rogwindow.AsusAPIConfig = {
+          system: "rog",
+          websitePath: 'us',
+          theme: "rog",
+          campaignId: "3f8bcb17-b07f-4992-bcf7-72cdfcf704f9",
+          zIndex: 11900,
+        }; (function (w, d, s, l, i) {
+          w[l] = w[l] || [];
+          w[l].push({'gtm.start': new Date().getTime(), event: 'gtm.js' });
+          var f = d.getElementsByTagName(s)[0],
+          j = d.createElement(s),
+          dl = l != "dataLayer" ? "&l=" + l : "";
+          j.defer = true;
+          j.src = "https://www.googletagmanager.com/gtm.js?id=" + i + dl;
+          f.parentNode.insertBefore(j, f);
+          })(window, document, "script", "dataLayer", "GTM-NJRLM8");
+          
+  
+  
+      Accessibility links Skip to content Accessibility Help Skip to Menu ASUS Footer    USER  
+                    My ROG Elite Rewards
+                   
+                    My Account
+                   
+                    Check My Order
+                   
+                    My Wishlist
+                   
+                    Shopping FAQs
+                     SHOP Products  Innovation  Downloads  COMMUNITY  What's HOT  Support  Shop PBA     ASUS home logo         Your Bag is empty.   Your Bag is empty.      We're Sorry The page you’re looking for can’t be found.     About ROGHomeAccessibility Help             facebook            instagram            tiktok            twitter            youtube            discord            twitch Get the latest deals and more 
+            Enter email address
+             
+          Sign up
+          
+
+        Please enter a valid email address.     United States/English   Privacy PolicyTerms of Use Notice 
+          Cookie Settings
+         &copy;ASUSTeK Computer Inc. All rights reserved. window.__NUXT__=(function(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q,r,s,t,u,v,w,x,y,z,A,B,C,D,E,F,G,H,I,J,K,L,M,N,O,P,Q,R,S,T,U,V,W,X,Y,Z,_,$,aa,ab,ac,ad,ae,af,ag,ah,ai,aj,ak,al,am,an,ao,ap,aq,ar,as,at,au,av,aw,ax,ay,az,aA,aB,aC,aD,aE,aF,aG,aH,aI,aJ,aK,aL,aM,aN,aO,aP,aQ,aR,aS,aT,aU,aV,aW,aX,aY,aZ,a_,a$,ba,bb,bc,bd,be,bf,bg,bh,bi,bj,bk,bl,bm,bn,bo,bp,bq,br,bs,bt,bu,bv,bw,bx,by,bz,bA,bB,bC,bD,bE,bF,bG,bH,bI,bJ,bK,bL,bM,bN,bO,bP,bQ,bR,bS,bT,bU,bV,bW,bX,bY,bZ,b_,b$,ca,cb){O.websiteId=Y;O.webPath=Z;O.language=k;O.accountLang="en-us";O.isoCode=_;O.freeShipping=b;O.memberDiscount=a;O.cookieBannerFlag=a;O.currencyCode="USD";O.priceWithTax=a;O.currencySymbol=F;O.currencyPosition=l;O.thousandSeparators=f;O.decimalSeparator=j;O.numberOfDecimal=h;O.storeviewCode=$;O.ecDomain=z;O.tagLang=$;O.hatchStatus=c;O.ecStatus=c;O.hatchRegionCode=_;O.hatchLang=b;O.mcc=A;O.graphqApiType=n;O.priceReduction=a;O.customerGroup=c;O.groupIdOnly=a;O.addOn=c;O.singlePurchase=c;O.guestId=B;O.currencyFormat=a;O.hundredthsTemplate=c;O.brand=c;O.brandName=e;O.miniCarQty=c;O.authHasGroup=m;return {layout:"default",data:[{websiteCurrent:O,overviewData:b,siteURL:"rog.asus.com\u002Fus\u002Finnovation\u002Farmoury-crate\u002F",productCustomizeTabOverviewData:b,gaClientId:b,aticket:b}],fetch:{},error:{statusCode:404,message:"頁面不存在"},state:{Website:{websiteObj:[{websiteId:c,webPath:"global",language:k,accountLang:H,isoCode:b,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:h,webPath:"mx",language:v,accountLang:"es-mx",isoCode:aa,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"MXN",priceWithTax:c,currencySymbol:F,currencyPosition:l,thousandSeparators:f,decimalSeparator:j,numberOfDecimal:h,storeviewCode:ab,ecDomain:z,tagLang:ab,hatchStatus:c,ecStatus:c,hatchRegionCode:aa,hatchLang:b,mcc:A,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:B,currencyFormat:a,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:c,authHasGroup:m},{websiteId:3,webPath:"es",language:v,accountLang:"es-ES",isoCode:ac,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:x,priceWithTax:c,currencySymbol:C,currencyPosition:p,thousandSeparators:j,decimalSeparator:f,numberOfDecimal:h,storeviewCode:ad,ecDomain:s,tagLang:ad,hatchStatus:c,ecStatus:c,hatchRegionCode:ac,hatchLang:b,mcc:t,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:4,webPath:"th",language:"ไทย",accountLang:"th-th",isoCode:ae,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"THB",priceWithTax:c,currencySymbol:"฿",currencyPosition:l,thousandSeparators:f,decimalSeparator:j,numberOfDecimal:h,storeviewCode:af,ecDomain:"https:\u002F\u002Fth.store.asus.com",tagLang:af,hatchStatus:c,ecStatus:c,hatchRegionCode:ae,hatchLang:b,mcc:o,graphqApiType:D,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:a,guestId:g,currencyFormat:a,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:5,webPath:"tw",language:ag,accountLang:"zh-tw",isoCode:ah,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"TWD",priceWithTax:c,currencySymbol:"NT$",currencyPosition:l,thousandSeparators:f,decimalSeparator:b,numberOfDecimal:a,storeviewCode:ai,ecDomain:z,tagLang:ai,hatchStatus:a,ecStatus:c,hatchRegionCode:ah,hatchLang:b,mcc:A,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:B,currencyFormat:a,hundredthsTemplate:a,brand:c,brandName:e,miniCarQty:c,authHasGroup:m},O,{websiteId:7,webPath:"br",language:aj,accountLang:"pt-br",isoCode:"BR",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"BRL",priceWithTax:c,currencySymbol:"R$ ",currencyPosition:l,thousandSeparators:j,decimalSeparator:f,numberOfDecimal:h,storeviewCode:ak,ecDomain:"https:\u002F\u002Fbr.store.asus.com",tagLang:ak,hatchStatus:a,ecStatus:c,hatchRegionCode:b,hatchLang:b,mcc:o,graphqApiType:r,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:8,webPath:al,language:k,accountLang:al,isoCode:I,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:am,priceWithTax:c,currencySymbol:F,currencyPosition:l,thousandSeparators:f,decimalSeparator:j,numberOfDecimal:h,storeviewCode:an,ecDomain:z,tagLang:an,hatchStatus:c,ecStatus:c,hatchRegionCode:I,hatchLang:b,mcc:A,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:B,currencyFormat:a,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:c,authHasGroup:m},{websiteId:9,webPath:"ca-fr",language:J,accountLang:ao,isoCode:I,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:am,priceWithTax:c,currencySymbol:" $",currencyPosition:p,thousandSeparators:w,decimalSeparator:f,numberOfDecimal:h,storeviewCode:ap,ecDomain:z,tagLang:ap,hatchStatus:c,ecStatus:c,hatchRegionCode:I,hatchLang:b,mcc:A,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:B,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:c,authHasGroup:m},{websiteId:10,webPath:"latin",language:v,accountLang:E,isoCode:b,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:11,webPath:"tr",language:"Türkçe",accountLang:"tr-tr",isoCode:aq,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"TRY",priceWithTax:c,currencySymbol:" TL",currencyPosition:p,thousandSeparators:j,decimalSeparator:f,numberOfDecimal:h,storeviewCode:ar,ecDomain:z,tagLang:ar,hatchStatus:c,ecStatus:c,hatchRegionCode:aq,hatchLang:b,mcc:A,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:B,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:c,authHasGroup:m},{websiteId:12,webPath:"it",language:"Italiano",accountLang:"it-IT",isoCode:as,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:x,priceWithTax:c,currencySymbol:C,currencyPosition:p,thousandSeparators:j,decimalSeparator:f,numberOfDecimal:h,storeviewCode:at,ecDomain:s,tagLang:at,hatchStatus:c,ecStatus:c,hatchRegionCode:as,hatchLang:b,mcc:t,graphqApiType:n,priceReduction:c,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:13,webPath:"jp",language:"日本語",accountLang:"ja-jp",isoCode:au,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"JPY",priceWithTax:c,currencySymbol:"¥",currencyPosition:l,thousandSeparators:f,decimalSeparator:b,numberOfDecimal:a,storeviewCode:av,ecDomain:"https:\u002F\u002Fstore.asus.com",tagLang:av,hatchStatus:a,ecStatus:c,hatchRegionCode:au,hatchLang:b,mcc:"MCC3",graphqApiType:D,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:a,guestId:g,currencyFormat:a,hundredthsTemplate:a,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:14,webPath:"me-en",language:k,accountLang:"en-ae",isoCode:b,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:aw,priceWithTax:c,currencySymbol:"AED ",currencyPosition:l,thousandSeparators:f,decimalSeparator:j,numberOfDecimal:h,storeviewCode:"rog_en_ME",ecDomain:"https:\u002F\u002Fme-en.store.asus.com",tagLang:K,hatchStatus:a,ecStatus:c,hatchRegionCode:b,hatchLang:b,mcc:o,graphqApiType:r,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:15,webPath:"lk",language:k,accountLang:"en-lk",isoCode:"LK",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:16,webPath:"in",language:k,accountLang:"en-in",isoCode:ax,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"INR",priceWithTax:c,currencySymbol:"₹ ",currencyPosition:l,thousandSeparators:f,decimalSeparator:j,numberOfDecimal:h,storeviewCode:ay,ecDomain:"https:\u002F\u002Fin.store.asus.com",tagLang:ay,hatchStatus:c,ecStatus:c,hatchRegionCode:ax,hatchLang:b,mcc:o,graphqApiType:r,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:g,currencyFormat:a,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:17,webPath:"bd",language:k,accountLang:"en-BD",isoCode:"BD",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:18,webPath:"cn",language:"简体中文",accountLang:"zh-CN",isoCode:az,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"CNY",priceWithTax:c,currencySymbol:b,currencyPosition:l,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:"rog_zh_CN",hatchStatus:a,ecStatus:c,hatchRegionCode:az,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:19,webPath:"hk",language:ag,accountLang:"zh-hk",isoCode:L,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:aA,priceWithTax:c,currencySymbol:aB,currencyPosition:l,thousandSeparators:f,decimalSeparator:j,numberOfDecimal:h,storeviewCode:P,ecDomain:aC,tagLang:P,hatchStatus:a,ecStatus:c,hatchRegionCode:L,hatchLang:b,mcc:o,graphqApiType:D,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:a,guestId:g,currencyFormat:a,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:20,webPath:"vn",language:"Việt Nam",accountLang:"vi-vn",isoCode:aD,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"VND",priceWithTax:c,currencySymbol:" ₫",currencyPosition:p,thousandSeparators:j,decimalSeparator:b,numberOfDecimal:a,storeviewCode:aE,ecDomain:"https:\u002F\u002Fvn.store.asus.com",tagLang:aE,hatchStatus:c,ecStatus:c,hatchRegionCode:aD,hatchLang:b,mcc:o,graphqApiType:r,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:g,currencyFormat:c,hundredthsTemplate:a,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:21,webPath:"kr",language:"한국어",accountLang:"ko-kr",isoCode:aF,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"KRW",priceWithTax:c,currencySymbol:"₩",currencyPosition:l,thousandSeparators:f,decimalSeparator:b,numberOfDecimal:a,storeviewCode:aG,ecDomain:"https:\u002F\u002Fkr.store.asus.com",tagLang:aG,hatchStatus:c,ecStatus:c,hatchRegionCode:aF,hatchLang:b,mcc:o,graphqApiType:D,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:a,guestId:g,currencyFormat:a,hundredthsTemplate:a,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:22,webPath:"ru",language:"Русский",accountLang:"ru-RU",isoCode:"RU",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:23,webPath:"sg",language:k,accountLang:"en-sg",isoCode:aH,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"SGD",priceWithTax:c,currencySymbol:"S$",currencyPosition:l,thousandSeparators:f,decimalSeparator:j,numberOfDecimal:h,storeviewCode:"rog_en_SG",ecDomain:"https:\u002F\u002Fsg.store.asus.com",tagLang:K,hatchStatus:c,ecStatus:c,hatchRegionCode:aH,hatchLang:b,mcc:o,graphqApiType:r,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:c,singlePurchase:a,guestId:g,currencyFormat:a,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:24,webPath:"nz",language:k,accountLang:"en-nz",isoCode:"NZ",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:25,webPath:"ph",language:k,accountLang:"en-ph",isoCode:"PH",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:c,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:m},{websiteId:26,webPath:"id",language:"Bahasa Indonesia",accountLang:"id-id",isoCode:aI,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"IDR",priceWithTax:c,currencySymbol:"Rp ",currencyPosition:l,thousandSeparators:j,decimalSeparator:b,numberOfDecimal:a,storeviewCode:aJ,ecDomain:"https:\u002F\u002Fid.store.asus.com",tagLang:aJ,hatchStatus:a,ecStatus:c,hatchRegionCode:aI,hatchLang:b,mcc:o,graphqApiType:D,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:a,guestId:g,currencyFormat:a,hundredthsTemplate:a,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:27,webPath:"au",language:k,accountLang:"en-au",isoCode:aK,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"AUD",priceWithTax:c,currencySymbol:F,currencyPosition:l,thousandSeparators:f,decimalSeparator:j,numberOfDecimal:h,storeviewCode:aL,ecDomain:"https:\u002F\u002Fau.store.asus.com",tagLang:aL,hatchStatus:c,ecStatus:c,hatchRegionCode:aK,hatchLang:b,mcc:o,graphqApiType:D,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:a,guestId:g,currencyFormat:a,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:28,webPath:"my",language:k,accountLang:"en-my",isoCode:aM,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"MYR",priceWithTax:c,currencySymbol:"RM",currencyPosition:l,thousandSeparators:f,decimalSeparator:j,numberOfDecimal:h,storeviewCode:"rog_ms_MY",ecDomain:z,tagLang:"rog_rog_ms_MY",hatchStatus:a,ecStatus:c,hatchRegionCode:aM,hatchLang:b,mcc:A,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:B,currencyFormat:a,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:c,authHasGroup:m},{websiteId:29,webPath:"de",language:aN,accountLang:"de-de",isoCode:aO,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:x,priceWithTax:c,currencySymbol:C,currencyPosition:p,thousandSeparators:j,decimalSeparator:f,numberOfDecimal:h,storeviewCode:aP,ecDomain:s,tagLang:aP,hatchStatus:c,ecStatus:c,hatchRegionCode:aO,hatchLang:b,mcc:t,graphqApiType:n,priceReduction:c,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:30,webPath:"pl",language:"Polski",accountLang:"pl-PL",isoCode:aQ,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"PLN",priceWithTax:c,currencySymbol:" zł",currencyPosition:p,thousandSeparators:w,decimalSeparator:f,numberOfDecimal:h,storeviewCode:aR,ecDomain:s,tagLang:aR,hatchStatus:c,ecStatus:c,hatchRegionCode:aQ,hatchLang:b,mcc:t,graphqApiType:n,priceReduction:c,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:31,webPath:"no",language:"Norwegian",accountLang:"no-NO",isoCode:"NO",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:c,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:32,webPath:"se",language:"Svenska",accountLang:"sv-SE",isoCode:aS,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"SEK",priceWithTax:c,currencySymbol:" SEK",currencyPosition:p,thousandSeparators:w,decimalSeparator:f,numberOfDecimal:h,storeviewCode:aT,ecDomain:s,tagLang:aT,hatchStatus:c,ecStatus:c,hatchRegionCode:aS,hatchLang:b,mcc:t,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:33,webPath:"dk",language:"Dansk",accountLang:"da-dk",isoCode:aU,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"DKK",priceWithTax:c,currencySymbol:" DKK",currencyPosition:p,thousandSeparators:j,decimalSeparator:f,numberOfDecimal:h,storeviewCode:aV,ecDomain:s,tagLang:aV,hatchStatus:c,ecStatus:c,hatchRegionCode:aU,hatchLang:b,mcc:t,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:34,webPath:"uk",language:k,accountLang:"en-GB",isoCode:aW,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"GBP",priceWithTax:c,currencySymbol:"£",currencyPosition:l,thousandSeparators:f,decimalSeparator:j,numberOfDecimal:h,storeviewCode:"rog_en_UK",ecDomain:"https:\u002F\u002Fuk.store.asus.com",tagLang:"rog_en_GB",hatchStatus:c,ecStatus:c,hatchRegionCode:aW,hatchLang:b,mcc:o,graphqApiType:r,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:g,currencyFormat:a,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:35,webPath:"sk",language:"Slovensko",accountLang:"sk-SK",isoCode:"SK",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:36,webPath:"cz",language:"Čeština",accountLang:"cs-cz",isoCode:"CZ",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"CZK",priceWithTax:c,currencySymbol:" Kč",currencyPosition:p,thousandSeparators:w,decimalSeparator:f,numberOfDecimal:h,storeviewCode:aX,ecDomain:s,tagLang:aX,hatchStatus:a,ecStatus:c,hatchRegionCode:b,hatchLang:b,mcc:t,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:37,webPath:"ch-fr",language:J,accountLang:"fr-ch",isoCode:Q,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:c,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:39,webPath:"ch-de",language:aN,accountLang:"de-CH",isoCode:Q,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:c,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:40,webPath:"ro",language:"România",accountLang:"ro-RO",isoCode:"RO",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"RON",priceWithTax:c,currencySymbol:" Lei",currencyPosition:p,thousandSeparators:j,decimalSeparator:f,numberOfDecimal:h,storeviewCode:aY,ecDomain:"https:\u002F\u002Fro.store.asus.com",tagLang:aY,hatchStatus:a,ecStatus:c,hatchRegionCode:b,hatchLang:b,mcc:o,graphqApiType:r,priceReduction:c,customerGroup:c,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:41,webPath:"rs",language:"Српски",accountLang:"sr-RS",isoCode:aZ,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:43,webPath:"hu",language:"Magyar",accountLang:"hu-hu",isoCode:"HU",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"HUF",priceWithTax:c,currencySymbol:" Ft",currencyPosition:p,thousandSeparators:w,decimalSeparator:b,numberOfDecimal:a,storeviewCode:a_,ecDomain:s,tagLang:a_,hatchStatus:a,ecStatus:c,hatchRegionCode:b,hatchLang:b,mcc:t,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:a,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:44,webPath:"fi",language:"Suomi",accountLang:"fi-fi",isoCode:a$,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:x,priceWithTax:c,currencySymbol:C,currencyPosition:p,thousandSeparators:w,decimalSeparator:f,numberOfDecimal:h,storeviewCode:ba,ecDomain:s,tagLang:ba,hatchStatus:c,ecStatus:c,hatchRegionCode:a$,hatchLang:b,mcc:t,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:45,webPath:"pt",language:aj,accountLang:"pt-PT",isoCode:bb,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:x,priceWithTax:c,currencySymbol:C,currencyPosition:p,thousandSeparators:w,decimalSeparator:f,numberOfDecimal:h,storeviewCode:bc,ecDomain:s,tagLang:bc,hatchStatus:c,ecStatus:c,hatchRegionCode:bb,hatchLang:b,mcc:t,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:46,webPath:bd,language:J,accountLang:ao,isoCode:R,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:x,priceWithTax:c,currencySymbol:C,currencyPosition:p,thousandSeparators:w,decimalSeparator:f,numberOfDecimal:h,storeviewCode:be,ecDomain:s,tagLang:be,hatchStatus:c,ecStatus:c,hatchRegionCode:R,hatchLang:b,mcc:t,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:47,webPath:"be-nl",language:bf,accountLang:"nl-be",isoCode:S,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:x,priceWithTax:c,currencySymbol:bg,currencyPosition:l,thousandSeparators:j,decimalSeparator:f,numberOfDecimal:h,storeviewCode:bh,ecDomain:s,tagLang:bh,hatchStatus:c,ecStatus:c,hatchRegionCode:S,hatchLang:bi,mcc:t,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:48,webPath:"be-fr",language:J,accountLang:"fr-be",isoCode:S,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:x,priceWithTax:c,currencySymbol:C,currencyPosition:p,thousandSeparators:w,decimalSeparator:f,numberOfDecimal:h,storeviewCode:bj,ecDomain:s,tagLang:bj,hatchStatus:c,ecStatus:c,hatchRegionCode:R,hatchLang:bd,mcc:t,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:49,webPath:bi,language:bf,accountLang:"nl-NL",isoCode:bk,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:x,priceWithTax:c,currencySymbol:bg,currencyPosition:l,thousandSeparators:j,decimalSeparator:f,numberOfDecimal:h,storeviewCode:bl,ecDomain:s,tagLang:bl,hatchStatus:c,ecStatus:c,hatchRegionCode:bk,hatchLang:b,mcc:t,graphqApiType:n,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:c,singlePurchase:c,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:m},{websiteId:50,webPath:"gr",language:"Greek",accountLang:"el-GR",isoCode:bm,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:51,webPath:bn,language:k,accountLang:bn,isoCode:bo,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"ZAR",priceWithTax:c,currencySymbol:"R ",currencyPosition:l,thousandSeparators:f,decimalSeparator:b,numberOfDecimal:a,storeviewCode:bp,ecDomain:"https:\u002F\u002Fza.store.asus.com",tagLang:bp,hatchStatus:c,ecStatus:c,hatchRegionCode:bo,hatchLang:b,mcc:o,graphqApiType:r,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:g,currencyFormat:c,hundredthsTemplate:a,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:52,webPath:"me-ar",language:M,accountLang:"ae-ar",isoCode:b,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:aw,priceWithTax:c,currencySymbol:" د.إ.‏‏",currencyPosition:l,thousandSeparators:f,decimalSeparator:j,numberOfDecimal:h,storeviewCode:"rog_ar_ME",ecDomain:"https:\u002F\u002Fme-ar.store.asus.com",tagLang:bq,hatchStatus:a,ecStatus:c,hatchRegionCode:b,hatchLang:b,mcc:o,graphqApiType:r,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:g,currencyFormat:c,hundredthsTemplate:c,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:53,webPath:"bg",language:k,accountLang:"en-bg",isoCode:"BG",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:55,webPath:"il",language:"עברית",accountLang:"he-IL",isoCode:"IL",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:56,webPath:"ea",language:k,accountLang:H,isoCode:b,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:58,webPath:"ua-ua",language:"Українська",accountLang:"uk-UA",isoCode:br,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:"UAH",priceWithTax:c,currencySymbol:" грн",currencyPosition:p,thousandSeparators:w,decimalSeparator:b,numberOfDecimal:a,storeviewCode:"rog_ua_UA",ecDomain:"https:\u002F\u002Fua.store.asus.com",tagLang:"rog_uk_UA",hatchStatus:c,ecStatus:c,hatchRegionCode:br,hatchLang:b,mcc:o,graphqApiType:r,priceReduction:a,customerGroup:c,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:g,currencyFormat:c,hundredthsTemplate:a,brand:c,brandName:e,miniCarQty:a,authHasGroup:d},{websiteId:59,webPath:bs,language:M,accountLang:bs,isoCode:b,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:61,webPath:"np",language:k,accountLang:"en-NP",isoCode:"NP",freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:62,webPath:"wa",language:k,accountLang:"en-NG",isoCode:b,freeShipping:b,memberDiscount:a,cookieBannerFlag:a,currencyCode:b,priceWithTax:a,currencySymbol:b,currencyPosition:b,thousandSeparators:b,decimalSeparator:b,numberOfDecimal:a,storeviewCode:b,ecDomain:b,tagLang:b,hatchStatus:a,ecStatus:a,hatchRegionCode:b,hatchLang:b,mcc:b,graphqApiType:b,priceReduction:a,customerGroup:a,groupIdOnly:a,addOn:a,singlePurchase:a,guestId:b,currencyFormat:a,hundredthsTemplate:a,brand:a,brandName:b,miniCarQty:a,authHasGroup:d},{websiteId:68,webPath:"mm",language:"မြန်မာ",accountLang:"my-MM",isoCode:"MM",freeShipping:b,memberDiscount:a,cookieBa</div>
+            </div>
+            <div class="card-footer">
+                
+            </div>
+        </div>        <div class="component-card status-not-installed" data-name="NVIDIA GeForce Experience" data-category="Software" data-status="Not Installed">
+            <div class="card-header">
+                <div>
+                    <div class="component-name">NVIDIA GeForce Experience</div>
+                    <div class="component-category">Software</div>
+                </div>
+                <div class="status-badge">Not Installed</div>
+            </div>
+            <div class="card-body">
+                <div class="version-row">
+                    <span class="version-label">Local Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Latest Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                
+            </div>
+            <div class="card-footer">
+                
+            </div>
+        </div>        <div class="component-card status-not-installed" data-name="Razer Synapse 3" data-category="Software" data-status="Not Installed">
+            <div class="card-header">
+                <div>
+                    <div class="component-name">Razer Synapse 3</div>
+                    <div class="component-category">Software</div>
+                </div>
+                <div class="status-badge">Not Installed</div>
+            </div>
+            <div class="card-body">
+                <div class="version-row">
+                    <span class="version-label">Local Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Latest Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                
+            </div>
+            <div class="card-footer">
+                
+            </div>
+        </div>        <div class="component-card status-error" data-name="Razer Cortex" data-category="Software" data-status="Error">
+            <div class="card-header">
+                <div>
+                    <div class="component-name">Razer Cortex</div>
+                    <div class="component-category">Software</div>
+                </div>
+                <div class="status-badge">Error</div>
+            </div>
+            <div class="card-body">
+                <div class="version-row">
+                    <span class="version-label">Local Version:</span>
+                    <span class="version-value">11.4.10+44d1eb445ca204331db64a82e560876f8abd3150</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Latest Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                <div style='color:var(--error-color); font-size:0.875rem; margin-top:0.5rem;'>Error: WebScraper: Regex pattern 'Version ([0-9.]+)' did not match any content on 'https://www.razer.com/cortex'.</div>
+            </div>
+            <div class="card-footer">
+                
+            </div>
+        </div>        <div class="component-card status-error" data-name="Logitech Options+" data-category="Software" data-status="Error">
+            <div class="card-header">
+                <div>
+                    <div class="component-name">Logitech Options+</div>
+                    <div class="component-category">Software</div>
+                </div>
+                <div class="status-badge">Error</div>
+            </div>
+            <div class="card-body">
+                <div class="version-row">
+                    <span class="version-label">Local Version:</span>
+                    <span class="version-value">1.98.804269</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Latest Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                <div style='color:var(--error-color); font-size:0.875rem; margin-top:0.5rem;'>Error: WebScraper: Regex pattern 'Version ([0-9.]+)' did not match any content on 'https://www.logitech.com/en-us/software/logi-options-plus.html'.</div>
+            </div>
+            <div class="card-footer">
+                
+            </div>
+        </div>        <div class="component-card status-error" data-name="Steam" data-category="Software" data-status="Error">
+            <div class="card-header">
+                <div>
+                    <div class="component-name">Steam</div>
+                    <div class="component-category">Software</div>
+                </div>
+                <div class="status-badge">Error</div>
+            </div>
+            <div class="card-body">
+                <div class="version-row">
+                    <span class="version-label">Local Version:</span>
+                    <span class="version-value">01.00.00.02</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Latest Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                <div style='color:var(--error-color); font-size:0.875rem; margin-top:0.5rem;'>Error: WebScraper: Regex pattern 'Version ([0-9.]+)' did not match any content on 'https://store.steampowered.com/about/'.</div>
+            </div>
+            <div class="card-footer">
+                
+            </div>
+        </div>        <div class="component-card status-not-installed" data-name="Epic Games Launcher" data-category="Software" data-status="Not Installed">
+            <div class="card-header">
+                <div>
+                    <div class="component-name">Epic Games Launcher</div>
+                    <div class="component-category">Software</div>
+                </div>
+                <div class="status-badge">Not Installed</div>
+            </div>
+            <div class="card-body">
+                <div class="version-row">
+                    <span class="version-label">Local Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Latest Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                
+            </div>
+            <div class="card-footer">
+                
+            </div>
+        </div>        <div class="component-card status-error" data-name="Battle.net" data-category="Software" data-status="Error">
+            <div class="card-header">
+                <div>
+                    <div class="component-name">Battle.net</div>
+                    <div class="component-category">Software</div>
+                </div>
+                <div class="status-badge">Error</div>
+            </div>
+            <div class="card-body">
+                <div class="version-row">
+                    <span class="version-label">Local Version:</span>
+                    <span class="version-value">2.47.0.15688</span>
+                </div>
+                <div class="version-row">
+                    <span class="version-label">Latest Version:</span>
+                    <span class="version-value">-</span>
+                </div>
+                <div style='color:var(--error-color); font-size:0.875rem; margin-top:0.5rem;'>Error: WebScraper: Regex pattern 'Version ([0-9.]+)' did not match any content on 'https://www.blizzard.com/apps/battle.net/desktop'.</div>
+            </div>
+            <div class="card-footer">
+                
+            </div>
+        </div>
+        </div>
+    </div>
+
+    <script>
+        function filterItems() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const checkboxes = document.querySelectorAll('.filters input[type="checkbox"]');
+            const activeStatuses = Array.from(checkboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            const items = document.querySelectorAll('.component-card');
+
+            items.forEach(item => {
+                const name = item.dataset.name.toLowerCase();
+                const category = item.dataset.category.toLowerCase();
+                const status = item.dataset.status;
+
+                const matchesSearch = name.includes(search) || category.includes(search);
+                const matchesStatus = activeStatuses.includes(status);
+
+                if (matchesSearch && matchesStatus) {
+                    item.classList.remove('hidden');
+                } else {
+                    item.classList.add('hidden');
+                }
+            });
+        }
+
+        document.getElementById('searchInput').addEventListener('input', filterItems);
+        
+        // Initial filter to respect default checkbox state
+        filterItems();
+    </script>
+</body>
+</html>
