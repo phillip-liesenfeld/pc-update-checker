@@ -1,0 +1,18 @@
+# Runs this repo's check on every pull request, every push to master, and on demand
+# (Actions tab -> check -> Run workflow). Glue only: the checks themselves live
+# in check.ps1, so running that file locally gives the same answer as CI.
+name: check
+on:
+  pull_request:
+  push:
+    branches: [master]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - run: pwsh -NoProfile -File ./check.ps1
