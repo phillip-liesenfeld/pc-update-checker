@@ -51,28 +51,56 @@ function Compare-Version {
 
     $Result.Diff = "$LocalVersion -> $RemoteVersion"
 
-    # 3. Attempt System.Version comparison first (most robust for standard X.Y.Z.W)
-    try {
-        $VerLocal = [System.Version]$NormLocal
-        $VerRemote = [System.Version]$NormRemote
+    # 3. Numeric versions, optionally SemVer-shaped: 1.2.3[.4...][-pre.release][+build]
+    #    This replaces a [System.Version] comparison, which treats a missing component
+    #    as -1: 1.2 < 1.2.0, so a registry "1.20.3" looked older than winget's
+    #    "1.20.3.0" and reported a false update. Rules here:
+    #      - a missing trailing component is 0
+    #      - a pre-release is older than its release (2.0.0-beta < 2.0.0)
+    #      - +build metadata is ignored (Razer Cortex reports "11.4.10+44d1eb4...")
+    function Split-SemVer ($v) {
+        if ($v -notmatch '^(\d+(?:\.\d+)*)(?:-([0-9A-Za-z.\-]+))?(?:\+[0-9A-Za-z.\-]+)?$') { return $null }
+        return [PSCustomObject]@{ Core = [long[]]($Matches[1] -split '\.'); Pre = $Matches[2] }
+    }
 
-        if ($VerRemote -gt $VerLocal) {
+    # -1 / 0 / 1 for remote vs local, SemVer precedence for pre-release identifiers.
+    function Compare-SemVer ($l, $r) {
+        $n = [Math]::Max($l.Core.Count, $r.Core.Count)
+        for ($i = 0; $i -lt $n; $i++) {
+            $a = if ($i -lt $l.Core.Count) { $l.Core[$i] } else { 0 }
+            $b = if ($i -lt $r.Core.Count) { $r.Core[$i] } else { 0 }
+            if ($b -ne $a) { return [Math]::Sign($b - $a) }
+        }
+        if (-not $l.Pre -and -not $r.Pre) { return 0 }
+        if (-not $r.Pre) { return 1 }     # remote is the release of local's pre-release
+        if (-not $l.Pre) { return -1 }    # remote is a pre-release of local's release
+        $pl = $l.Pre -split '\.'; $pr = $r.Pre -split '\.'
+        for ($i = 0; $i -lt [Math]::Min($pl.Count, $pr.Count); $i++) {
+            $x = $pl[$i]; $y = $pr[$i]
+            $xn = $x -match '^\d+$'; $yn = $y -match '^\d+$'
+            if ($xn -and $yn) { $c = [Math]::Sign([long]$y - [long]$x) }
+            elseif ($xn) { $c = 1 }       # numeric identifiers sort before alphanumeric
+            elseif ($yn) { $c = -1 }
+            else { $c = [Math]::Sign([string]::CompareOrdinal($y, $x)) }
+            if ($c -ne 0) { return $c }
+        }
+        return [Math]::Sign($pr.Count - $pl.Count)
+    }
+
+    $SvLocal = Split-SemVer $NormLocal
+    $SvRemote = Split-SemVer $NormRemote
+    if ($SvLocal -and $SvRemote) {
+        if ((Compare-SemVer $SvLocal $SvRemote) -gt 0) {
             $Result.IsUpdateAvailable = $true
             $Result.Status = "Update Available"
         }
-        elseif ($VerRemote -eq $VerLocal) {
-            $Result.Status = "Up to Date"
-        }
         else {
-            # Remote is older — treat as up to date to avoid noise
+            # Equal, or remote is older - treat as up to date to avoid noise
             $Result.Status = "Up to Date"
         }
         return $Result
     }
-    catch {
-        # Fallback to segment-based comparison for non-standard strings
-        # e.g. "1.2.3-beta" or different segment counts that System.Version hates
-    }
+    # Otherwise fall through to segment-based comparison for non-standard strings
 
     # 4. Segment-based comparison
     # Split by dots, hyphens, or underscores
